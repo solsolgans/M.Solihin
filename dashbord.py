@@ -41,9 +41,12 @@ if page == "Produk Terlaris":
 elif page == "Jumlah Pesanan":
     st.title("📈 Tren Jumlah Pesanan")
     order_df['order_purchase_timestamp'] = pd.to_datetime(order_df['order_purchase_timestamp'])
-    order_df['year_month'] = order_df['order_purchase_timestamp'].dt.to_period('M')
+    order_df['year_month'] = order_df['order_purchase_timestamp'].dt.strftime('%Y-%m')  # Perbaikan disini
     order_trend = order_df.groupby('year_month').size().reset_index(name='total_orders')
+    
     fig = px.line(order_trend, x='year_month', y='total_orders', title='Jumlah Pesanan dari Waktu ke Waktu')
+    fig.update_xaxes(type='category')  # Pastikan sumbu x bertipe kategori agar tidak ada error
+    
     st.plotly_chart(fig)
     
     # Kesimpulan
