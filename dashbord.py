@@ -35,7 +35,7 @@ if page == "Produk Terlaris":
     st.plotly_chart(fig)
     
     # Kesimpulan
-    st.write("\n**Analsis:** Pelanggan cenderung membeli produk rumah tangga dan dekorasi, dengan kategori furniture & dekorasi, peralatan tempat tidur & kamar mandi, serta perkakas taman menjadi yang paling diminati.")
+    st.write("\n**Analsis:** Dari visualisasi tersebut, kategori "moveis_decoracao" (furniture dan dekorasi) menjadi produk yang paling laris, diikuti oleh "cama_mesa_banho" (peralatan tempat tidur dan kamar mandi) serta "ferramentas_jardim" (perkakas taman). Hal ini menunjukkan bahwa pelanggan memiliki minat yang tinggi terhadap produk-produk rumah tangga dan dekorasi Kategori seperti "informatica_acessorios" (aksesoris komputer), "relogios_presentes" (jam tangan & hadiah), dan "beleza_saude" (kecantikan & kesehatan) juga cukup diminati, tetapi jumlah pembeliannya lebih sedikit dibandingkan dengan tiga kategori teratas.")
 
 # **2. Tren Jumlah Pesanan**
 elif page == "Jumlah Pesanan":
