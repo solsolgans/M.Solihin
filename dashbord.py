@@ -16,6 +16,35 @@ def load_data():
     products_df = pd.read_csv("https://drive.google.com/uc?id=1hsDHePmIcWb2qlyOIftgZQh-3UJCQbSy")
     seller_df = pd.read_csv("https://drive.google.com/uc?id=1AiJ90xua1lKpGPffAYBXEiaoAFkObd1b")
     product_category_df = pd.read_csv("https://drive.google.com/uc?id=1UOnHFNy4RaPlYxiereMlMfQgnXNVKimE")
+    
+    # Data Cleaning
+    # Ubah tipe data ke datetime
+    order_df["order_purchase_timestamp"] = pd.to_datetime(order_df["order_purchase_timestamp"])
+    order_df["order_approved_at"] = pd.to_datetime(order_df["order_approved_at"])
+    order_df["order_delivered_carrier_date"] = pd.to_datetime(order_df["order_delivered_carrier_date"])
+    order_df["order_delivered_customer_date"] = pd.to_datetime(order_df["order_delivered_customer_date"])
+    order_df["order_estimated_delivery_date"] = pd.to_datetime(order_df["order_estimated_delivery_date"])
+    
+    order_item_df["shipping_limit_date"] = pd.to_datetime(order_item_df["shipping_limit_date"])
+    order_review_df["review_creation_date"] = pd.to_datetime(order_review_df["review_creation_date"])
+    
+    # Tangani Missing Values
+    order_df.fillna({"order_approved_at": "Unknown", 
+                     "order_delivered_carrier_date": "Unknown", 
+                     "order_delivered_customer_date": "Unknown"}, inplace=True)
+    
+    order_review_df.fillna({"review_comment_title": "", 
+                            "review_comment_message": ""}, inplace=True)
+    
+    products_df.fillna({"product_category_name": "Unknown"}, inplace=True)
+    num_cols = ["product_name_lenght", "product_description_lenght", "product_photos_qty", 
+                "product_weight_g", "product_length_cm", "product_height_cm", "product_width_cm"]
+    for col in num_cols:
+        products_df[col].fillna(products_df[col].median(), inplace=True)
+    
+    # Hapus Duplikasi
+    geolocation_df.drop_duplicates(inplace=True)
+    
     return order_df, geolocation_df, order_item_df, order_review_df, customer_df, order_payment_df, products_df, seller_df, product_category_df
 
 # Load data
@@ -37,7 +66,6 @@ if page == "Produk Terlaris":
 # **2. Tren Jumlah Pesanan**
 elif page == "Jumlah Pesanan":
     st.title("📈 Tren Jumlah Pesanan")
-    order_df['order_purchase_timestamp'] = pd.to_datetime(order_df['order_purchase_timestamp'])
     order_df['year_month'] = order_df['order_purchase_timestamp'].dt.to_period('M')
     order_trend = order_df.groupby('year_month').size().reset_index(name='total_orders')
     fig = px.line(order_trend, x='year_month', y='total_orders', title='Jumlah Pesanan dari Waktu ke Waktu')
