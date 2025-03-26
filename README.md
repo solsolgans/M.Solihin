@@ -3,8 +3,9 @@
 https://solihin-ecommerce.streamlit.app/#ae2325
 
 **Setup Environment**
-
-pip install streamlit pandas numpy plotly matplotlib seaborn scikit-learn
+pipenv install
+pipenv shell
+pip install -r requirements.txt 
 
 **Run Streamlit**
 
