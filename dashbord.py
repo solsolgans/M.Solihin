@@ -37,7 +37,7 @@ filtered_order_df = order_df[(order_df['order_purchase_timestamp'].dt.date >= st
 # Filter berdasarkan kategori produk
 st.sidebar.markdown("### Filter Kategori Produk")
 all_categories = products_df['product_category_name'].unique().tolist()
-selected_categories = st.sidebar.multiselect("Pilih Kategori Produk", all_categories, default=all_categories)
+selected_categories = st.sidebar.multiselect("Pilih Kategori Produk", all_categories, default=all_categories, placeholder="Pilih kategori...")
 
 filtered_products = products_df[products_df['product_category_name'].isin(selected_categories)]
 filtered_order_item_df = order_item_df[order_item_df['product_id'].isin(filtered_products['product_id'])]
