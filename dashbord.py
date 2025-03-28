@@ -23,23 +23,24 @@ order_df, geolocation_df, order_item_df, order_review_df, customer_df, order_pay
 
 # Sidebar Navigasi
 st.sidebar.title("Dashboard E-Commerce")
+
+# Filter Rentang Tanggal
 st.sidebar.markdown("### Filter Rentang Tanggal")
 order_df['order_purchase_timestamp'] = pd.to_datetime(order_df['order_purchase_timestamp'])
-start_date = st.sidebar.date_input("Mulai", order_df['order_purchase_timestamp'].min().date())
-end_date = st.sidebar.date_input("Selesai", order_df['order_purchase_timestamp'].max().date())
+min_date = order_df['order_purchase_timestamp'].min().date()
+max_date = order_df['order_purchase_timestamp'].max().date()
+start_date = st.sidebar.date_input("Mulai", min_date, min_value=min_date, max_value=max_date)
+end_date = st.sidebar.date_input("Selesai", max_date, min_value=min_date, max_value=max_date)
 
 filtered_order_df = order_df[(order_df['order_purchase_timestamp'].dt.date >= start_date) & (order_df['order_purchase_timestamp'].dt.date <= end_date)]
 
 # Filter berdasarkan kategori produk
 st.sidebar.markdown("### Filter Kategori Produk")
-all_categories = ['Semua'] + products_df['product_category_name'].unique().tolist()
-selected_category = st.sidebar.selectbox("Pilih Kategori Produk", all_categories)
+all_categories = products_df['product_category_name'].unique().tolist()
+selected_categories = st.sidebar.multiselect("Pilih Kategori Produk", all_categories, default=all_categories)
 
-if selected_category != 'Semua':
-    filtered_products = products_df[products_df['product_category_name'] == selected_category]
-    filtered_order_item_df = order_item_df[order_item_df['product_id'].isin(filtered_products['product_id'])]
-else:
-    filtered_order_item_df = order_item_df
+filtered_products = products_df[products_df['product_category_name'].isin(selected_categories)]
+filtered_order_item_df = order_item_df[order_item_df['product_id'].isin(filtered_products['product_id'])]
 
 page = st.sidebar.radio("Pilih Analisis", ["Produk Terlaris", "Jumlah Pesanan", "Kota Terbanyak", "Hubungan Rating & Repeat Order", "Pengaruh Keterlambatan"])
 
