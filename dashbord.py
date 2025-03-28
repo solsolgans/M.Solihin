@@ -24,20 +24,10 @@ st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
 all_categories = products_df['product_category_name'].dropna().unique()
 selected_categories = st.sidebar.multiselect("Pilih Kategori Produk:", all_categories, default=all_categories[:5])
 
-# Filter berdasarkan rentang tanggal
-min_date = order_df['order_purchase_timestamp'].min().date()
-max_date = order_df['order_purchase_timestamp'].max().date()
-selected_date_range = st.sidebar.date_input("Pilih Rentang Tanggal:", [min_date, max_date], min_value=min_date, max_value=max_date)
-selected_date_range = [pd.to_datetime(d) for d in selected_date_range]  # Konversi ke datetime64
-
-# Filter data berdasarkan kategori dan rentang tanggal
+# Filter data berdasarkan kategori
 filtered_orders = order_item_df.merge(products_df, on='product_id', how='left')
 filtered_orders = filtered_orders[filtered_orders['product_category_name'].isin(selected_categories)]
 filtered_orders = filtered_orders.merge(order_df[['order_id', 'order_purchase_timestamp']], on='order_id', how='left')
-filtered_orders = filtered_orders[
-    (filtered_orders['order_purchase_timestamp'] >= selected_date_range[0]) &
-    (filtered_orders['order_purchase_timestamp'] <= selected_date_range[1])
-]
 
 # Pilihan Analisis
 page = st.sidebar.radio("Pilih Analisis", ["Produk Terlaris", "Jumlah Pesanan", "Kota Terbanyak", "Hubungan Rating & Repeat Order", "Pengaruh Keterlambatan"])
@@ -65,6 +55,9 @@ elif page == "Kota Terbanyak":
     top_cities = customer_df['customer_city'].value_counts().head(10)
     fig = px.bar(x=top_cities.index, y=top_cities.values, title='Top 10 Kota dengan Pembelian Terbanyak')
     st.plotly_chart(fig)
+    # Kesimpulan
+    st.write("\n**Analisis:** Sao Paulo mendominasi e-commerce, menunjukkan bahwa e-commerce lebih berkembang di kota metropolitan dengan infrastruktur dan daya beli yang lebih tinggi.")
+
 
 # **4. Hubungan Rating dengan Repeat Order**
 elif page == "Hubungan Rating & Repeat Order":
@@ -73,6 +66,10 @@ elif page == "Hubungan Rating & Repeat Order":
     repeat_order = order_review_df.groupby('review_score').size().reset_index(name='avg_repeat_orders')
     fig = px.bar(repeat_order, x='review_score', y='avg_repeat_orders', title='Hubungan Rating dengan Repeat Orders')
     st.plotly_chart(fig)
+
+    # Kesimpulan
+    st.write("\n**Analisis:** Tidak ada korelasi signifikan antara rating pelanggan dengan repeat orders, menunjukkan faktor lain seperti harga dan kebutuhan lebih berpengaruh.")
+
 
 # **5. Pengaruh Keterlambatan terhadap Rating**
 elif page == "Pengaruh Keterlambatan":
@@ -83,6 +80,10 @@ elif page == "Pengaruh Keterlambatan":
     avg_rating = order_df.merge(order_review_df, on='order_id').groupby('is_late')['review_score'].mean().reset_index()
     fig = px.line(avg_rating, x='is_late', y='review_score', markers=True, title='Pengaruh Keterlambatan terhadap Rating')
     st.plotly_chart(fig)
+
+    # Kesimpulan
+    st.write("\n**Analisis:** Keterlambatan pengiriman terbukti menurunkan rating pelanggan secara signifikan, menunjukkan bahwa ketepatan waktu sangat mempengaruhi kepuasan pelanggan.")
+
 
 st.sidebar.markdown("---")
 st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
