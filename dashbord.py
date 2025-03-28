@@ -23,30 +23,32 @@ order_df, geolocation_df, order_item_df, order_review_df, customer_df, order_pay
 
 # Sidebar Navigasi
 st.sidebar.title("Dashboard E-Commerce")
+st.sidebar.markdown("---")
+st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
 
-# Filter Rentang Tanggal
-st.sidebar.markdown("### Filter Rentang Tanggal")
+# Filter berdasarkan kategori produk
+all_categories = products_df['product_category_name'].unique()
+selected_categories = st.sidebar.multiselect("Pilih Kategori Produk:", all_categories, default=all_categories[:5])
+
+# Filter berdasarkan rentang tanggal
 order_df['order_purchase_timestamp'] = pd.to_datetime(order_df['order_purchase_timestamp'])
 min_date = order_df['order_purchase_timestamp'].min().date()
 max_date = order_df['order_purchase_timestamp'].max().date()
-start_date = st.sidebar.date_input("Mulai", min_date, min_value=min_date, max_value=max_date)
-end_date = st.sidebar.date_input("Selesai", max_date, min_value=min_date, max_value=max_date)
+selected_date_range = st.sidebar.date_input("Pilih Rentang Tanggal:", [min_date, max_date], min_value=min_date, max_value=max_date)
 
-filtered_order_df = order_df[(order_df['order_purchase_timestamp'].dt.date >= start_date) & (order_df['order_purchase_timestamp'].dt.date <= end_date)]
+# Filter data berdasarkan kategori dan rentang tanggal
+filtered_orders = order_item_df.merge(products_df, on='product_id')
+filtered_orders = filtered_orders[filtered_orders['product_category_name'].isin(selected_categories)]
+filtered_orders = filtered_orders.merge(order_df, on='order_id')
+filtered_orders = filtered_orders[(filtered_orders['order_purchase_timestamp'].dt.date >= selected_date_range[0]) &
+                                  (filtered_orders['order_purchase_timestamp'].dt.date <= selected_date_range[1])]
 
-# Filter berdasarkan kategori produk dengan checkbox
-st.sidebar.markdown("### Filter Kategori Produk")
-all_categories = products_df['product_category_name'].unique().tolist()
-selected_categories = []
-
-with st.sidebar.expander("Pilih Kategori Produk"):
-    for category in all_categories:
-        if st.checkbox(category, value=True):
-            selected_categories.append(category)
-
-filtered_products = products_df[products_df['product_category_name'].isin(selected_categories)]
-filtered_order_item_df = order_item_df[order_item_df['product_id'].isin(filtered_products['product_id'])]
-
+# Menampilkan hasil setelah filter
+st.title("📊 Produk Terlaris Berdasarkan Filter")
+top_filtered_products = filtered_orders.groupby("product_category_name").size().reset_index(name='total_orders')
+top_filtered_products = top_filtered_products.nlargest(10, 'total_orders')
+fig = px.bar(top_filtered_products, x='product_category_name', y='total_orders', title='Top 10 Produk Terlaris')
+st.plotly_chart(fig)
 page = st.sidebar.radio("Pilih Analisis", ["Produk Terlaris", "Jumlah Pesanan", "Kota Terbanyak", "Hubungan Rating & Repeat Order", "Pengaruh Keterlambatan"])
 
 # **1. Produk Terlaris**
