@@ -23,34 +23,43 @@ order_df, geolocation_df, order_item_df, order_review_df, customer_df, order_pay
 
 # Sidebar Navigasi
 st.sidebar.title("Dashboard E-Commerce")
+st.sidebar.markdown("### Filter Rentang Tanggal")
+order_df['order_purchase_timestamp'] = pd.to_datetime(order_df['order_purchase_timestamp'])
+start_date = st.sidebar.date_input("Mulai", order_df['order_purchase_timestamp'].min().date())
+end_date = st.sidebar.date_input("Selesai", order_df['order_purchase_timestamp'].max().date())
+
+filtered_order_df = order_df[(order_df['order_purchase_timestamp'].dt.date >= start_date) & (order_df['order_purchase_timestamp'].dt.date <= end_date)]
+
+# Filter berdasarkan kategori produk
+st.sidebar.markdown("### Filter Kategori Produk")
+all_categories = ['Semua'] + products_df['product_category_name'].unique().tolist()
+selected_category = st.sidebar.selectbox("Pilih Kategori Produk", all_categories)
+
+if selected_category != 'Semua':
+    filtered_products = products_df[products_df['product_category_name'] == selected_category]
+    filtered_order_item_df = order_item_df[order_item_df['product_id'].isin(filtered_products['product_id'])]
+else:
+    filtered_order_item_df = order_item_df
+
 page = st.sidebar.radio("Pilih Analisis", ["Produk Terlaris", "Jumlah Pesanan", "Kota Terbanyak", "Hubungan Rating & Repeat Order", "Pengaruh Keterlambatan"])
 
 # **1. Produk Terlaris**
 if page == "Produk Terlaris":
     st.title("📊 Produk Terlaris")
-    top_products = order_item_df.groupby("product_id").size().reset_index(name='total_orders')
+    top_products = filtered_order_item_df.groupby("product_id").size().reset_index(name='total_orders')
     top_products = top_products.merge(products_df, on='product_id')
     top_products = top_products.nlargest(10, 'total_orders')
     fig = px.bar(top_products, x='product_category_name', y='total_orders', title='Top 10 Produk Terlaris')
     st.plotly_chart(fig)
-    
-    # Kesimpulan
-    st.write("\n**Analsis:** Dari visualisasi tersebut, kategori moveis_decoracao (furniture dan dekorasi) menjadi produk yang paling laris, diikuti oleh cama_mesa_banho (peralatan tempat tidur dan kamar mandi) serta ferramentas_jardim (perkakas taman). Hal ini menunjukkan bahwa pelanggan memiliki minat yang tinggi terhadap produk-produk rumah tangga dan dekorasi Kategori seperti informatica_acessorios (aksesoris komputer), relogios_presentes (jam tangan & hadiah), dan beleza_saude (kecantikan & kesehatan) juga cukup diminati, tetapi jumlah pembeliannya lebih sedikit dibandingkan dengan tiga kategori teratas.")
 
 # **2. Tren Jumlah Pesanan**
 elif page == "Jumlah Pesanan":
     st.title("📈 Tren Jumlah Pesanan")
-    order_df['order_purchase_timestamp'] = pd.to_datetime(order_df['order_purchase_timestamp'])
-    order_df['year_month'] = order_df['order_purchase_timestamp'].dt.strftime('%Y-%m')  # Perbaikan disini
-    order_trend = order_df.groupby('year_month').size().reset_index(name='total_orders')
-    
+    filtered_order_df['year_month'] = filtered_order_df['order_purchase_timestamp'].dt.strftime('%Y-%m')
+    order_trend = filtered_order_df.groupby('year_month').size().reset_index(name='total_orders')
     fig = px.line(order_trend, x='year_month', y='total_orders', title='Jumlah Pesanan dari Waktu ke Waktu')
-    fig.update_xaxes(type='category')  # Pastikan sumbu x bertipe kategori agar tidak ada error
-    
+    fig.update_xaxes(type='category')
     st.plotly_chart(fig)
-    
-    # Kesimpulan
-    st.write("\n**Analisis:** Tren jumlah pesanan meningkat signifikan dari awal 2017 hingga puncaknya di awal 2018, kemungkinan dipengaruhi oleh musim liburan atau promosi.")
 
 # **3. Kota dengan Jumlah Pembelian Terbanyak**
 elif page == "Kota Terbanyak":
@@ -58,9 +67,6 @@ elif page == "Kota Terbanyak":
     top_cities = customer_df['customer_city'].value_counts().head(10)
     fig = px.bar(x=top_cities.index, y=top_cities.values, title='Top 10 Kota dengan Pembelian Terbanyak')
     st.plotly_chart(fig)
-    
-    # Kesimpulan
-    st.write("\n**Analisis:** Sao Paulo mendominasi e-commerce, menunjukkan bahwa e-commerce lebih berkembang di kota metropolitan dengan infrastruktur dan daya beli yang lebih tinggi.")
 
 # **4. Hubungan Rating dengan Repeat Order**
 elif page == "Hubungan Rating & Repeat Order":
@@ -69,9 +75,6 @@ elif page == "Hubungan Rating & Repeat Order":
     repeat_order = order_review_df.groupby('review_score').size().reset_index(name='avg_repeat_orders')
     fig = px.bar(repeat_order, x='review_score', y='avg_repeat_orders', title='Hubungan Rating dengan Repeat Orders')
     st.plotly_chart(fig)
-    
-    # Kesimpulan
-    st.write("\n**Analisis:** Tidak ada korelasi signifikan antara rating pelanggan dengan repeat orders, menunjukkan faktor lain seperti harga dan kebutuhan lebih berpengaruh.")
 
 # **5. Pengaruh Keterlambatan terhadap Rating**
 elif page == "Pengaruh Keterlambatan":
@@ -81,9 +84,6 @@ elif page == "Pengaruh Keterlambatan":
     avg_rating = order_df.merge(order_review_df, on='order_id').groupby('is_late')['review_score'].mean().reset_index()
     fig = px.line(avg_rating, x='is_late', y='review_score', markers=True, title='Pengaruh Keterlambatan terhadap Rating')
     st.plotly_chart(fig)
-    
-    # Kesimpulan
-    st.write("\n**Analisis:** Keterlambatan pengiriman terbukti menurunkan rating pelanggan secara signifikan, menunjukkan bahwa ketepatan waktu sangat mempengaruhi kepuasan pelanggan.")
 
 st.sidebar.markdown("---")
 st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
