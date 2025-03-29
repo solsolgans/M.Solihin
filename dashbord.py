@@ -20,6 +20,27 @@ st.sidebar.title("MENU💰")
 st.sidebar.markdown("---")
 st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
 
+# Tema (Terang/Gelap)
+theme_option = st.sidebar.selectbox("Pilih Tema:", ["Terang", "Gelap"])
+
+def set_theme():
+    if theme_option == "Gelap":
+        st.markdown("""
+            <style>
+                body {background-color: #1E1E1E; color: white;}
+                .stApp {background-color: #1E1E1E; color: white;}
+            </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <style>
+                body {background-color: white; color: black;}
+                .stApp {background-color: white; color: black;}
+            </style>
+        """, unsafe_allow_html=True)
+
+set_theme()
+
 # Filter berdasarkan kategori produk
 all_categories = products_df['product_category_name'].dropna().unique()
 selected_categories = st.sidebar.multiselect("Pilih Kategori Produk:", all_categories, default=all_categories[:5])
