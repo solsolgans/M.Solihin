@@ -17,8 +17,7 @@ order_df, order_item_df, products_df, customer_df, order_review_df = load_data()
 
 # Sidebar Navigasi
 st.sidebar.title("MENU💰")
-st.sidebar.markdown("---")
-st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
+
 
 # Tema (Terang/Gelap)
 theme_option = st.sidebar.selectbox("Pilih Tema:", ["Terang", "Gelap"])
@@ -50,6 +49,8 @@ filtered_orders = order_item_df.merge(products_df, on='product_id', how='left')
 filtered_orders = filtered_orders[filtered_orders['product_category_name'].isin(selected_categories)]
 filtered_orders = filtered_orders.merge(order_df[['order_id', 'order_purchase_timestamp']], on='order_id', how='left')
 
+st.sidebar.markdown("---")
+st.sidebar.write("Dibuat oleh **Muhammad Solihin**")
 st.title("📊 Dashboard E-Commerce")
 
 # Produk Terlaris
