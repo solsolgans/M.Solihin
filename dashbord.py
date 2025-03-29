@@ -18,31 +18,34 @@ order_df, order_item_df, products_df, customer_df, order_review_df = load_data()
 # Sidebar Navigasi
 st.sidebar.title("MENU💰")
 
-# Tema (Terang/Gelap) dengan Tombol
-if "theme" not in st.session_state:
-    st.session_state["theme"] = "light"
+# Inisialisasi tema
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'light'
 
+# Fungsi untuk mengganti tema
 def toggle_theme():
-    st.session_state["theme"] = "dark" if st.session_state["theme"] == "light" else "light"
+    st.session_state.theme = 'dark' if st.session_state.theme == 'light' else 'light'
 
-if st.session_state["theme"] == "light":
-    if st.sidebar.button("🌞 Terang", on_click=toggle_theme):
-        pass
-    sidebar_color = "#f0f2f6"
-    text_color = "black"
+# Tombol ganti tema
+theme_icon = "🌙" if st.session_state.theme == 'light' else "🌞"
+if st.sidebar.button(f"Ganti Tema {theme_icon}"):
+    toggle_theme()
+
+# Terapkan tema
+if st.session_state.theme == 'dark':
+    st.markdown("""
+        <style>
+            body {background-color: #1E1E1E; color: white;}
+            .stApp {background-color: #1E1E1E; color: white;}
+        </style>
+    """, unsafe_allow_html=True)
 else:
-    if st.sidebar.button("🌙 Gelap", on_click=toggle_theme):
-        pass
-    sidebar_color = "#1E1E1E"
-    text_color = "white"
-
-st.markdown(f"""
-    <style>
-        body {{background-color: {sidebar_color}; color: {text_color};}}
-        .stApp {{background-color: {sidebar_color}; color: {text_color};}}
-        .css-1d391kg, .css-18e3th9 {{background-color: {sidebar_color} !important; color: {text_color} !important;}}
-    </style>
-""", unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+            body {background-color: white; color: black;}
+            .stApp {background-color: white; color: black;}
+        </style>
+    """, unsafe_allow_html=True)
 
 # Filter berdasarkan kategori produk
 all_categories = products_df['product_category_name'].dropna().unique()
