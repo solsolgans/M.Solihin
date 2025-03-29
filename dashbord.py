@@ -2,6 +2,17 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# Inisialisasi session state untuk tema jika belum ada
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = 'light'
+
+# Fungsi untuk mengubah tema
+def toggle_theme():
+    if st.session_state['theme'] == 'light':
+        st.session_state['theme'] = 'dark'
+    else:
+        st.session_state['theme'] = 'light'
+
 # Load dataset dari Google Drive
 @st.cache_data
 def load_data():
@@ -15,43 +26,32 @@ def load_data():
 # Load data
 order_df, order_item_df, products_df, customer_df, order_review_df = load_data()
 
+# Atur tema berdasarkan session state
+theme = st.session_state['theme']
+if theme == 'dark':
+    bg_color = "#1E1E1E"
+    text_color = "#FFFFFF"
+    sidebar_bg = "#2E2E2E"
+    button_label = "🌞 Terang"
+else:
+    bg_color = "#FFFFFF"
+    text_color = "#000000"
+    sidebar_bg = "#F0F2F6"
+    button_label = "🌙 Gelap"
+
+# Terapkan CSS untuk tema
+st.markdown(f"""
+    <style>
+        body {{ background-color: {bg_color}; color: {text_color}; }}
+        .stApp {{ background-color: {bg_color}; color: {text_color}; }}
+        .sidebar .sidebar-content {{ background-color: {sidebar_bg}; }}
+        .stTextInput, .stSelectbox, .stMultiselect, .stButton {{ color: {text_color}; }}
+    </style>
+""", unsafe_allow_html=True)
+
 # Sidebar Navigasi
 st.sidebar.title("MENU💰")
-
-# Tema (Terang/Gelap)
-if "theme" not in st.session_state:
-    st.session_state.theme = "light"
-
-theme_button = st.sidebar.button("🌞" if st.session_state.theme == "dark" else "🌙", key="theme_toggle")
-if theme_button:
-    st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
-
-# Atur tema berdasarkan state
-if st.session_state.theme == "dark":
-    theme_colors = {
-        "bg": "#1E1E1E",
-        "text": "#FFFFFF",
-        "primary": "#BB86FC",
-        "secondary": "#03DAC6"
-    }
-else:
-    theme_colors = {
-        "bg": "#FFFFFF",
-        "text": "#000000",
-        "primary": "#6200EE",
-        "secondary": "#03A9F4"
-    }
-
-# Terapkan CSS
-st.markdown(
-    f"""
-    <style>
-        body {{ background-color: {theme_colors['bg']}; color: {theme_colors['text']}; }}
-        .stApp {{ background-color: {theme_colors['bg']}; color: {theme_colors['text']}; }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+st.sidebar.button(button_label, on_click=toggle_theme)
 
 # Filter berdasarkan kategori produk
 all_categories = products_df['product_category_name'].dropna().unique()
@@ -69,31 +69,34 @@ st.title("📊 Dashboard E-Commerce")
 # Produk Terlaris
 top_products = filtered_orders.groupby("product_category_name").size().reset_index(name='total_orders')
 top_products = top_products.nlargest(10, 'total_orders')
-fig = px.bar(top_products, x='product_category_name', y='total_orders', title='📊 Produk Terlaris', color_discrete_sequence=[theme_colors['primary']])
+fig = px.bar(top_products, x='product_category_name', y='total_orders', title='📊 Produk Terlaris')
 st.plotly_chart(fig)
 
 # Jumlah Pesanan
 filtered_orders['year_month'] = filtered_orders['order_purchase_timestamp'].dt.strftime('%Y-%m')
 order_trend = filtered_orders.groupby('year_month').size().reset_index(name='total_orders')
-fig = px.line(order_trend, x='year_month', y='total_orders', title='📈 Tren Jumlah Pesanan', color_discrete_sequence=[theme_colors['secondary']])
+fig = px.line(order_trend, x='year_month', y='total_orders', title='📈 Tren Jumlah Pesanan')
 fig.update_xaxes(type='category')
 st.plotly_chart(fig)
 
 # Kota dengan Jumlah Pembelian Terbanyak
 top_cities = customer_df['customer_city'].value_counts().head(10)
-fig = px.bar(x=top_cities.index, y=top_cities.values, title='🏙️ Kota dengan Jumlah Pembelian Terbanyak', color_discrete_sequence=[theme_colors['primary']])
+fig = px.bar(x=top_cities.index, y=top_cities.values, title='🏙️ Kota dengan Jumlah Pembelian Terbanyak')
 st.plotly_chart(fig)
+st.write("\n**Analisis:** Sao Paulo mendominasi e-commerce, menunjukkan bahwa e-commerce lebih berkembang di kota metropolitan dengan infrastruktur dan daya beli yang lebih tinggi.")
 
 # Hubungan Rating dengan Repeat Order
 order_review_df['review_score'] = order_review_df['review_score'].astype(int)
 repeat_order = order_review_df.groupby('review_score').size().reset_index(name='avg_repeat_orders')
-fig = px.bar(repeat_order, x='review_score', y='avg_repeat_orders', title='⭐ Hubungan Rating dengan Repeat Order', color_discrete_sequence=[theme_colors['secondary']])
+fig = px.bar(repeat_order, x='review_score', y='avg_repeat_orders', title='⭐ Hubungan Rating dengan Repeat Order')
 st.plotly_chart(fig)
+st.write("\n**Analisis:** Tidak ada korelasi signifikan antara rating pelanggan dengan repeat orders, menunjukkan faktor lain seperti harga dan kebutuhan lebih berpengaruh.")
 
 # Pengaruh Keterlambatan terhadap Rating
 order_df = order_df.dropna(subset=['order_delivered_customer_date'])  # Hindari error NaN
 order_df['delay'] = (order_df['order_delivered_customer_date'] - order_df['order_estimated_delivery_date']).dt.days
 order_df['is_late'] = order_df['delay'].apply(lambda x: 1 if x > 0 else 0)
 avg_rating = order_df.merge(order_review_df, on='order_id').groupby('is_late')['review_score'].mean().reset_index()
-fig = px.line(avg_rating, x='is_late', y='review_score', markers=True, title='🚚 Pengaruh Keterlambatan terhadap Rating', color_discrete_sequence=[theme_colors['primary']])
+fig = px.line(avg_rating, x='is_late', y='review_score', markers=True, title='🚚 Pengaruh Keterlambatan terhadap Rating')
 st.plotly_chart(fig)
+st.write("\n**Analisis:** Keterlambatan pengiriman terbukti menurunkan rating pelanggan secara signifikan, menunjukkan bahwa ketepatan waktu sangat mempengaruhi kepuasan pelanggan.")
