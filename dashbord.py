@@ -55,7 +55,7 @@ st.sidebar.button(button_label, on_click=toggle_theme)
 
 # Filter berdasarkan kategori produk
 all_categories = products_df['product_category_name'].dropna().unique()
-selected_categories = st.sidebar.multiselect("Pilih Kategori Produk:", all_categories, default=all_categories[:5])
+selected_categories = st.sidebar.multiselect("Pilih Kategori Produk untuk melihat produk terlaris dan tren jumlah pesanan:", all_categories, default=all_categories[:5])
 
 # Filter data berdasarkan kategori
 filtered_orders = order_item_df.merge(products_df, on='product_id', how='left')
